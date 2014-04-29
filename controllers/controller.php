@@ -78,6 +78,9 @@ $app->get('/auth/start', function() use($app) {
   $tokenEndpoint = IndieAuth\Client::discoverTokenEndpoint($me);
   $micropubEndpoint = IndieAuth\Client::discoverMicropubEndpoint($me);
 
+  // TODO:
+  // Add a warning if any of the endpoints are not https
+
   // Default to indieauth.com if they don't specify their own authorization endpoint
   if(!$authorizationEndpoint)
     $authorizationEndpoint = 'https://indieauth.com/auth';
