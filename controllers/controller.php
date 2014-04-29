@@ -1,12 +1,5 @@
 <?php
 
-function render($page, $data) {
-  global $app;
-  ob_start();
-  $app->render('layout.php', array_merge($data, array('page' => $page)));
-  return ob_get_clean();
-};
-
 function buildRedirectURI() {
   return 'http://' . $_SERVER['SERVER_NAME'] . '/auth/callback';
 }
@@ -21,53 +14,124 @@ $app->get('/signin', function() use($app) {
   $app->response()->body($html);
 });
 
+$app->get('/docs', function() use($app) {
+  $html = render('docs', array('title' => 'Docs'));
+  $app->response()->body($html);
+});
+
+$app->get('/creating-a-token-endpoint', function() use($app) {
+  $html = render('creating-a-token-endpoint', array('title' => 'Creating a Token Endpoint'));
+  $app->response()->body($html);
+});
+
+$app->get('/creating-a-micropub-endpoint', function() use($app) {
+  $html = render('creating-a-micropub-endpoint', array('title' => 'Creating a Micropub Endpoint'));
+  $app->response()->body($html);
+});
+
 $app->get('/auth/start', function() use($app) {
   $req = $app->request();
 
   $params = $req->params();
   
-  if(!array_key_exists('me', $params)) {
-    die("Error"); // TODO: real HTML error to the developer explaining they need to pass in a "me" parameter
+  if(!array_key_exists('me', $params) || $params['me'] == '') {
+    $html = render('auth_error', array(
+      'title' => 'Sign In',
+      'error' => 'Missing "me" parameter',
+      'errorDescription' => 'No "me" parameter was specified in the request.'
+    ));
+    $app->response()->body($html);
+    return;
   }
 
-  if(!array_key_exists('client_id', $params)) {
-    die("No client_id specified"); // TODO: real HTML error page here explaining to the developer that they need to specify their client_id
+  if(!array_key_exists('me', $params) || !($me = normalizeMeURL($params['me']))) {
+    $html = render('auth_error', array(
+      'title' => 'Sign In',
+      'error' => 'Invalid "me" Parameter',
+      'errorDescription' => 'The ID you entered, <strong>' . $params['me'] . '</strong> is not valid.'
+    ));
+    $app->response()->body($html);
+    return;
   }
 
-  if(!array_key_exists('redirect_uri', $params)) {
-    die("No redirect_uri specified"); // TODO: real HTML error here explaining why a redirect_uri is required
+  if(!array_key_exists('client_id', $params) || $params['client_id'] == '') {
+    $html = render('auth_error', array(
+      'title' => 'Sign In',
+      'error' => 'Missing "client_id" Parameter',
+      'errorDescription' => 'No "client_id" parameter was specified in the request. Every IndieAuth request must include a client_id indicating the app that is signing the user in.'
+    ));
+    $app->response()->body($html);
+    return;
   }
 
-  // Check to see if there is a token endpoint
-  $tokenEndpoint = IndieAuth\Client::discoverTokenEndpoint($params['me']);
-  if(!$tokenEndpoint) {
-    die("Unable to discover token endpoint"); // TODO: real HTML error page to the user with instructions on adding and creating a token endpoint
+  if(!array_key_exists('redirect_uri', $params) || $params['redirect_uri'] == '') {
+    $html = render('auth_error', array(
+      'title' => 'Sign In',
+      'error' => 'Missing "redirect" Parameter',
+      'errorDescription' => 'No "redirect_uri" parameter was specified in the request. Every IndieAuth request must include a redirect_uri otherwise the client doesn\'t know where to direct the user back to after signing in.'
+    ));
+    $app->response()->body($html);
+    return;
   }
 
-  $micropubEndpoint = IndieAuth\Client::discoverMicropubEndpoint($params['me']);
-  if(!$micropubEndpoint) {
-    die("No micropub endpoint declared"); // TODO: real HTML error to the user with instructions on linking to their micropub endpoint
-  }
-
-  $_SESSION['client_id'] = $params['client_id'];
-  $_SESSION['redirect_uri'] = $params['redirect_uri']; // Store the redirect_uri so we can redirect the browser there later
-
-  // Find the authorization endpoint this user delegates to
-  $authorizationEndpoint = IndieAuth\Client::discoverAuthorizationEndpoint($params['me']);
+  $authorizationEndpoint = IndieAuth\Client::discoverAuthorizationEndpoint($me);
+  $tokenEndpoint = IndieAuth\Client::discoverTokenEndpoint($me);
+  $micropubEndpoint = IndieAuth\Client::discoverMicropubEndpoint($me);
 
   // Default to indieauth.com if they don't specify their own authorization endpoint
   if(!$authorizationEndpoint)
     $authorizationEndpoint = 'https://indieauth.com/auth';
 
-  // Generate a "state" parameter for the request
-  $state = IndieAuth\Client::generateStateParameter();
-  $_SESSION['auth_state'] = $state;
+  if($tokenEndpoint && $micropubEndpoint && $authorizationEndpoint) {
+    // Generate a "state" parameter for the request
+    $state = IndieAuth\Client::generateStateParameter();
+    $_SESSION['auth_state'] = $state;
+    $_SESSION['client_id'] = $params['client_id'];
+    $_SESSION['redirect_uri'] = $params['redirect_uri']; // Store the redirect_uri so we can redirect the browser there later
 
-  $scope = 'post';
+    $scope = 'post';
+    $authorizationURL = IndieAuth\Client::buildAuthorizationURL($authorizationEndpoint, $me, buildRedirectURI(), $_SESSION['client_id'], $state, $scope);
+  } else {
+    $authorizationURL = false;
+  }
 
-  $authorizationURL = IndieAuth\Client::buildAuthorizationURL($authorizationEndpoint, $params['me'], buildRedirectURI(), $params['client_id'], $state, $scope);
+  // If the user has already signed in before and has a micropub access token, skip 
+  // the debugging screens and redirect immediately to the auth endpoint.
+  // This will still generate a new access token when they finish logging in.
+  // $user = ORM::for_table('users')->where('url', $me)->find_one();
+  if(false && $user && $user->micropub_access_token && !array_key_exists('restart', $params)) {
 
-  $app->redirect($authorizationURL);
+    $user->micropub_endpoint = $micropubEndpoint;
+    $user->authorization_endpoint = $authorizationEndpoint;
+    $user->token_endpoint = $tokenEndpoint;
+    $user->save();
+
+    $app->redirect($authorizationURL, 301);
+
+  } else {
+
+    // if(true || !$user)
+    //   $user = ORM::for_table('users')->create();
+    // $user->url = $me;
+    // $user->date_created = date('Y-m-d H:i:s');
+    // $user->micropub_endpoint = $micropubEndpoint;
+    // $user->authorization_endpoint = $authorizationEndpoint;
+    // $user->token_endpoint = $tokenEndpoint;
+    // $user->save();
+
+    $html = render('auth_start', array(
+      'title' => 'Sign In',
+      'me' => $me,
+      'authorizing' => $me,
+      'meParts' => parse_url($me),
+      'tokenEndpoint' => $tokenEndpoint,
+      'micropubEndpoint' => $micropubEndpoint,
+      'authorizationEndpoint' => $authorizationEndpoint,
+      'authorizationURL' => $authorizationURL
+    ));
+    $app->response()->body($html);
+  }
+
 });
 
 $app->get('/auth/callback', function() use($app) {

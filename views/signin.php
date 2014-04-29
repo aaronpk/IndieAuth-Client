@@ -1,16 +1,36 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<form action="/auth/start" method="get">
-  <label for="me">me:</label><br>
-  <input type="text" name="me" placeholder="http://me.example.com" size="40" value=""><br>
+<form action="/auth/start" method="get" role="form">
+  <div class="form-group">
+    <label for="me">me:</label><br>
+    <input type="text" name="me" placeholder="http://me.example.com" size="40" value="" class="form-control">
+  </div>
 
-  <label for="client_id">client_id:</label><br>
-  <input type="text" name="client_id" placeholder="https://app.example.com" size="40" value=""><br>
+  <div class="form-group">
+    <label for="client_id">client_id:</label><br>
+    <input type="text" name="client_id" placeholder="https://app.example.com" size="40" value="" class="form-control">
+  </div>
 
-  <label for="redirect_uri">redirect_uri:</label><br>
-  <input type="text" name="redirect_uri" placeholder="https://app.example.com/auth" size="40" value=""><br>
-  
-  <input type="submit" value="Begin Authorization">
+  <div class="form-group">
+    <label for="redirect_uri">redirect_uri:</label><br>
+    <input type="text" name="redirect_uri" placeholder="https://app.example.com/auth" size="40" value="" class="form-control">
+  </div>
+
+  <div class="form-group">
+    <label>scope:</label>
+    <label class="checkbox-inline">
+      <input type="checkbox" class="scope" value="post"> post
+    </label>
+    <label class="checkbox-inline">
+      <input type="checkbox" class="scope" value="delete"> delete
+    </label>
+  </div>
+    
+  <div class="form-group">
+    <input type="submit" value="Begin Authorization" class="btn btn-default">
+  </div>
+
+  <input type="hidden" name="scope" id="scope">
 </form>
 
 <p>This service acts as an IndieAuth client, performing discovery on the user's website to 
@@ -32,6 +52,19 @@
 <p><b>me:</b> the user's web address. They should enter this in your application, and you can include the value when building the auth URL.</p>
 <p><b>client_id:</b> the website and unique identifier for your application. On this website, you will need to whitelist the valid redirect_uris for your application.</p>
 <p><b>redirect_uri:</b> where this IndieAuth client should redirect to after authorization is complete.</p>
+<p><b>scope:</b> one or more scopes to request from the user. If no scope is selected, then the user is signing in only for identification purposes.</p>
 
 <h3>Example URL</h3>
-<p>https://client.indieauth.com/auth/start?me=<?=urlencode('http://example.com')?>&amp;client_id=<?=urlencode('http://your-great-app.com')?>&amp;redirect_uri=<?=urlencode('http://your-great-app.com/auth')?></p>
+<p>https://client.indieauth.com/auth/start?me=<?=urlencode('http://example.com')?>&amp;client_id=<?=urlencode('http://your-great-app.com')?>&amp;redirect_uri=<?=urlencode('http://your-great-app.com/auth')?>&amp;scope=post</p>
+
+<script>
+$(".scope").click(function(){
+  var scope = [];
+  $(".scope").each(function(){
+    if($(this).attr('checked') == 'checked') {
+      scope.push($(this).val());
+    }
+  });
+  $('#scope').val(scope.join(' '));
+});
+</script>

@@ -1,6 +1,7 @@
 {
   "require": {
     "indieauth/client": "0.1.*",
+    "saltybeagle/savant3": "dev-master",
     "slim/slim": "2.2.*",
     "mf2/mf2": "0.1.*"
   }

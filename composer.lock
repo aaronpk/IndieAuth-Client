@@ -3,20 +3,20 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "6c00672c71534dd33cfad44a4b82fe22",
+    "hash": "7ac1835b6e3573727e718e6402847123",
     "packages": [
         {
             "name": "indieauth/client",
-            "version": "0.1.1",
+            "version": "0.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/indieweb/indieauth-client-php.git",
-                "reference": "70e45a480a70402e7c47e29f0a0185730c8276a1"
+                "reference": "d0a9748aa643d826616ec1b02fb121f4aba0c9fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/indieweb/indieauth-client-php/zipball/70e45a480a70402e7c47e29f0a0185730c8276a1",
-                "reference": "70e45a480a70402e7c47e29f0a0185730c8276a1",
+                "url": "https://api.github.com/repos/indieweb/indieauth-client-php/zipball/d0a9748aa643d826616ec1b02fb121f4aba0c9fc",
+                "reference": "d0a9748aa643d826616ec1b02fb121f4aba0c9fc",
                 "shasum": ""
             },
             "require": {
@@ -40,7 +40,7 @@
                 }
             ],
             "description": "IndieAuth Client Library",
-            "time": "2014-01-02 06:39:26"
+            "time": "2014-03-02 21:07:38"
         },
         {
             "name": "indieweb/link-rel-parser",
@@ -137,6 +137,41 @@
             "time": "2013-10-20 12:25:50"
         },
         {
+            "name": "saltybeagle/savant3",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/saltybeagle/Savant3.git",
+                "reference": "ebf4385bf44bec8c7a169571ac178f626017c466"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/saltybeagle/Savant3/zipball/ebf4385bf44bec8c7a169571ac178f626017c466",
+                "reference": "ebf4385bf44bec8c7a169571ac178f626017c466",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "Savant3.php",
+                    "Savant3",
+                    "Savant3/resources"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL"
+            ],
+            "authors": [
+                {
+                    "name": "Brett Bieber",
+                    "email": "brett.bieber@gmail.com"
+                }
+            ],
+            "description": "Savant3 template engine",
+            "time": "2014-01-07 17:10:32"
+        },
+        {
             "name": "slim/slim",
             "version": "2.2.0",
             "source": {
@@ -187,9 +222,9 @@
 
     ],
     "minimum-stability": "stable",
-    "stability-flags": [
-
-    ],
+    "stability-flags": {
+        "saltybeagle/savant3": 20
+    },
     "platform": [
 
     ],

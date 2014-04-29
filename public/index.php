@@ -2,9 +2,12 @@
 chdir('..');
 require 'vendor/autoload.php';
 require 'lib/Savant.php';
+require 'lib/config.php';
+require 'lib/helpers.php';
+require 'lib/markdown.php';
 
 // Configure the Savant plugin
-\Slim\Extras\Views\Savant::$savantDirectory = 'lib/Savant3';
+\Slim\Extras\Views\Savant::$savantDirectory = 'vendor/saltybeagle/savant3';
 \Slim\Extras\Views\Savant::$savantOptions = array('template_path' => 'views');
 
 // Create a new app object with the Savant view renderer
